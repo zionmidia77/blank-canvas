@@ -1,0 +1,1 @@
+ALTER TABLE public.monthly_goals ADD COLUMN IF NOT EXISTS target_ltv numeric NOT NULL DEFAULT 0;

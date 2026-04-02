@@ -1,0 +1,1 @@
+ALTER TABLE public.bot_posting_queue REPLICA IDENTITY FULL;
