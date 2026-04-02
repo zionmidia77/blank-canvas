@@ -50,7 +50,7 @@ const Login = () => {
     let destination = from;
 
     if (signedInUser) {
-      const { data: hasAdminRole } = await supabase.rpc("has_role", {
+      const { data: hasAdminRole } = await (supabase.rpc as any)("has_role", {
         _user_id: signedInUser.id,
         _role: "admin",
       });
