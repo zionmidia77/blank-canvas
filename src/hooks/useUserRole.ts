@@ -27,7 +27,7 @@ export const useUserRole = () => {
     setResolvedUserId(null);
 
     const checkRole = async (attempt = 0) => {
-      const { data, error } = await supabase.rpc("has_role", {
+      const { data, error } = await (supabase.rpc as any)("has_role", {
         _user_id: user.id,
         _role: "admin",
       });
