@@ -126,6 +126,30 @@ const AdminBotPanel = () => {
     },
   });
 
+  const { data: postingHistory } = useQuery({
+    queryKey: ["posting-history-daily"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("posting_history_daily").select("*").order("dia", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: leadsPerBot } = useQuery({
+    queryKey: ["leads-per-bot"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("bot_config_id").not("bot_config_id", "is", null);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      data?.forEach((c: any) => {
+        counts.set(c.bot_config_id, (counts.get(c.bot_config_id) || 0) + 1);
+      });
+      return counts;
+    },
+    refetchInterval: 30000,
+  });
+
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30000);
     return () => clearInterval(interval);
