@@ -470,6 +470,7 @@ export type Database = {
           reference_relation: string | null
           reference_relation_2: string | null
           referred_by: string | null
+          requires_human: boolean | null
           residence_time: string | null
           response_time_hours: number | null
           rg: string | null
@@ -481,6 +482,7 @@ export type Database = {
           temperature: Database["public"]["Enums"]["lead_temperature"]
           updated_at: string
           vehicle_id: string | null
+          vehicle_label: string | null
         }
         Insert: {
           address_cep?: string | null
@@ -560,6 +562,7 @@ export type Database = {
           reference_relation?: string | null
           reference_relation_2?: string | null
           referred_by?: string | null
+          requires_human?: boolean | null
           residence_time?: string | null
           response_time_hours?: number | null
           rg?: string | null
@@ -571,6 +574,7 @@ export type Database = {
           temperature?: Database["public"]["Enums"]["lead_temperature"]
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Update: {
           address_cep?: string | null
@@ -650,6 +654,7 @@ export type Database = {
           reference_relation?: string | null
           reference_relation_2?: string | null
           referred_by?: string | null
+          requires_human?: boolean | null
           residence_time?: string | null
           response_time_hours?: number | null
           rg?: string | null
@@ -661,6 +666,7 @@ export type Database = {
           temperature?: Database["public"]["Enums"]["lead_temperature"]
           updated_at?: string
           vehicle_id?: string | null
+          vehicle_label?: string | null
         }
         Relationships: [
           {
