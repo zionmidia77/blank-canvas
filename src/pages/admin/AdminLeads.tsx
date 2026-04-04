@@ -180,6 +180,8 @@ const AdminLeads = () => {
     : null;
 
   const filtered = (clients || [])
+    .map(l => ({ ...l, _noPhone: !l.phone }))
+
     .filter(l => !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.phone?.includes(search) || l.interest?.toLowerCase().includes(search.toLowerCase()))
     .filter(l => stageFilter === "all" || l.pipeline_stage === stageFilter)
     .filter(l => sourceFilter === "all" || l.source === sourceFilter)
