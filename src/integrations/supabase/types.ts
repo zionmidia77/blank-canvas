@@ -157,36 +157,49 @@ export type Database = {
       }
       bot_posting_queue: {
         Row: {
+          bot_config_id: string | null
           created_at: string
           error_msg: string | null
           id: string
           local_bot_id: string
+          post_to_groups: boolean
           posted_at: string | null
           scheduled_for: string | null
           status: string
           vehicle_id: string
         }
         Insert: {
+          bot_config_id?: string | null
           created_at?: string
           error_msg?: string | null
           id?: string
           local_bot_id: string
+          post_to_groups?: boolean
           posted_at?: string | null
           scheduled_for?: string | null
           status?: string
           vehicle_id: string
         }
         Update: {
+          bot_config_id?: string | null
           created_at?: string
           error_msg?: string | null
           id?: string
           local_bot_id?: string
+          post_to_groups?: boolean
           posted_at?: string | null
           scheduled_for?: string | null
           status?: string
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bot_posting_queue_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "bot_configs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bot_posting_queue_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -1207,6 +1220,47 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posting_presets: {
+        Row: {
+          bot_config_id: string
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          post_time: string
+          post_to_groups: boolean
+          updated_at: string
+        }
+        Insert: {
+          bot_config_id: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          post_time?: string
+          post_to_groups?: boolean
+          updated_at?: string
+        }
+        Update: {
+          bot_config_id?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          post_time?: string
+          post_to_groups?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posting_presets_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "bot_configs"
             referencedColumns: ["id"]
           },
         ]
