@@ -231,6 +231,9 @@ export const BotLogsEnhanced = ({
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium truncate max-w-[120px]">{log.contact_name || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground truncate max-w-[120px]">
+                        {(log.client_id && vehicleLabels[log.client_id]) || "—"}
+                      </TableCell>
                       <TableCell className="hidden md:table-cell text-xs text-muted-foreground truncate max-w-[200px]">
                         {log.message_in || log.message_out || "—"}
                       </TableCell>

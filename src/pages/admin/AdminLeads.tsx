@@ -517,6 +517,9 @@ const AdminLeads = () => {
 
               {/* Meta row */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
+                {client._noPhone && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-warning/15 text-warning">📱 Aguardando telefone</span>
+                )}
                 <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${sourceBadge[client.source || "funnel"]}`}>
                   {client.source || "funnel"}
                 </span>
