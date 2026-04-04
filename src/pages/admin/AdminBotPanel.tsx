@@ -191,7 +191,7 @@ const AdminBotPanel = () => {
   const totalLeadsToday = configs?.reduce((s, c) => s + (c.leads_captured_today || 0), 0) || 0;
   const activeBots = configs?.filter((c) => c.is_active).length || 0;
   const totalBots = configs?.length || 0;
-  const onlineBots = configs?.filter((c) => c.last_heartbeat_at && (Date.now() - new Date(c.last_heartbeat_at).getTime()) < 300000).length || 0;
+  const onlineBots = configs?.filter((c) => c.last_heartbeat_at && (Date.now() - new Date(c.last_heartbeat_at).getTime()) < 120000).length || 0;
   const alertCount = useMemo(() => {
     let count = 0;
     configs?.forEach((bot) => {
