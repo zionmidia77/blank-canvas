@@ -147,6 +147,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bot_logs_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "posting_history_daily"
+            referencedColumns: ["bot_config_id"]
+          },
+          {
             foreignKeyName: "bot_logs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -199,6 +206,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bot_configs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_posting_queue_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "posting_history_daily"
+            referencedColumns: ["bot_config_id"]
           },
           {
             foreignKeyName: "bot_posting_queue_vehicle_id_fkey"
@@ -416,6 +430,7 @@ export type Database = {
           arsenal_score: number
           birth_city: string | null
           birthdate: string | null
+          bot_config_id: string | null
           budget_range: string | null
           churn_risk: number | null
           city: string | null
@@ -508,6 +523,7 @@ export type Database = {
           arsenal_score?: number
           birth_city?: string | null
           birthdate?: string | null
+          bot_config_id?: string | null
           budget_range?: string | null
           churn_risk?: number | null
           city?: string | null
@@ -600,6 +616,7 @@ export type Database = {
           arsenal_score?: number
           birth_city?: string | null
           birthdate?: string | null
+          bot_config_id?: string | null
           budget_range?: string | null
           churn_risk?: number | null
           city?: string | null
@@ -682,6 +699,20 @@ export type Database = {
           vehicle_label?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "bot_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "posting_history_daily"
+            referencedColumns: ["bot_config_id"]
+          },
           {
             foreignKeyName: "clients_referred_by_fkey"
             columns: ["referred_by"]
@@ -1263,6 +1294,13 @@ export type Database = {
             referencedRelation: "bot_configs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "posting_presets_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "posting_history_daily"
+            referencedColumns: ["bot_config_id"]
+          },
         ]
       }
       referrals: {
@@ -1695,7 +1733,17 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      posting_history_daily: {
+        Row: {
+          bot_config_id: string | null
+          bot_id: string | null
+          dia: string | null
+          primeiro_post: string | null
+          total_postados: number | null
+          ultimo_post: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -1705,6 +1753,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_leads_today: { Args: { config_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

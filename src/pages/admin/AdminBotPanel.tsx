@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Bot, Plus, Users, Zap, AlertTriangle, MessageSquare, Settings2, Clock, Radio, Send, Activity, BarChart3, Shield, ListOrdered, Bell } from "lucide-react";
+import { Bot, Plus, Users, Zap, AlertTriangle, MessageSquare, Settings2, Clock, Radio, Send, Activity, BarChart3, Shield, ListOrdered, Bell, Package } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import BotPerformanceDashboard from "@/components/admin/BotPerformanceDashboard";
 import BotHealthCard from "@/components/admin/bot/BotHealthCard";
 import BotAlerts from "@/components/admin/bot/BotAlerts";
@@ -123,6 +124,30 @@ const AdminBotPanel = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: postingHistory } = useQuery({
+    queryKey: ["posting-history-daily"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("posting_history_daily").select("*").order("dia", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+    refetchInterval: 30000,
+  });
+
+  const { data: leadsPerBot } = useQuery({
+    queryKey: ["leads-per-bot"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("clients").select("bot_config_id").not("bot_config_id", "is", null);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      data?.forEach((c: any) => {
+        counts.set(c.bot_config_id, (counts.get(c.bot_config_id) || 0) + 1);
+      });
+      return counts;
+    },
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
@@ -265,6 +290,48 @@ const AdminBotPanel = () => {
           {configs && configs.length > 0 && (
             <BotUptimeHistory configs={configs} />
           )}
+
+          {/* Posting History */}
+          {postingHistory && postingHistory.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Package className="w-4 h-4 text-primary" /> Histórico de Postagens por Dia
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bot</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Postados</TableHead>
+                      <TableHead>Primeiro Post</TableHead>
+                      <TableHead>Último Post</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {postingHistory.map((row: any, i: number) => {
+                      const botName = configs?.find((c) => c.id === row.bot_config_id)?.seller_name || row.bot_id?.slice(0, 8) || "—";
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium text-sm">{botName}</TableCell>
+                          <TableCell className="text-sm">{row.dia}</TableCell>
+                          <TableCell className="text-right font-bold text-sm">{row.total_postados}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {row.primeiro_post ? new Date(row.primeiro_post).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {row.ultimo_post ? new Date(row.ultimo_post).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Bots Tab */}
@@ -310,6 +377,10 @@ const AdminBotPanel = () => {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Leads capturados hoje</span>
                         <span className="font-bold text-primary text-2xl">{bot.leads_captured_today}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Total de leads (histórico)</span>
+                        <span className="font-bold text-lg">{leadsPerBot?.get(bot.id) || 0}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-1"><Zap className="w-3 h-3" /> Modo Teste (Dry)</span>
