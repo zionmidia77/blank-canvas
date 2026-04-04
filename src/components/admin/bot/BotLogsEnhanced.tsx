@@ -200,6 +200,7 @@ export const BotLogsEnhanced = ({
                   <TableHead className="w-[140px]">Hora</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Contato</TableHead>
+                  <TableHead className="hidden md:table-cell">Veículo</TableHead>
                   <TableHead className="hidden md:table-cell">Mensagem</TableHead>
                   <TableHead className="text-center">Lead?</TableHead>
                   <TableHead>Status</TableHead>
