@@ -198,6 +198,8 @@ const AdminLeads = () => {
       return true;
     })
     .sort((a, b) => {
+      // Leads sem telefone vão pro final
+      if (a._noPhone !== b._noPhone) return a._noPhone ? 1 : -1;
       let cmp = 0;
       if (sortField === "lead_score") cmp = a.lead_score - b.lead_score;
       else if (sortField === "name") cmp = a.name.localeCompare(b.name);
