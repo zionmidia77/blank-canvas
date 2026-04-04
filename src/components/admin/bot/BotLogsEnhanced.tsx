@@ -210,7 +210,7 @@ export const BotLogsEnhanced = ({
               <TableBody>
                 {!filteredLogs.length ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                       <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
                       {hasActiveFilters ? "Nenhum log encontrado com esses filtros" : "Nenhum log registrado ainda"}
                     </TableCell>
