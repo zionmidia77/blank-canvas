@@ -337,6 +337,10 @@ const AdminBotPanel = () => {
                         <span className="font-bold text-primary text-2xl">{bot.leads_captured_today}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Total de leads (histórico)</span>
+                        <span className="font-bold text-lg">{leadsPerBot?.get(bot.id) || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-1"><Zap className="w-3 h-3" /> Modo Teste (Dry)</span>
                         <Switch checked={bot.dry_mode} onCheckedChange={(v) => updateField.mutate({ id: bot.id, field: "dry_mode", value: v })} />
                       </div>
