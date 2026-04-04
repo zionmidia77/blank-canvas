@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,6 +50,24 @@ export const BotLogsEnhanced = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [detailLog, setDetailLog] = useState<BotLog | null>(null);
+  const [vehicleLabels, setVehicleLabels] = useState<Record<string, string>>({});
+
+  // Fetch vehicle_label for logs that have client_id
+  useEffect(() => {
+    if (!logs?.length) return;
+    const clientIds = [...new Set(logs.filter(l => l.client_id).map(l => l.client_id!))];
+    if (!clientIds.length) return;
+    supabase
+      .from("clients")
+      .select("id, vehicle_label")
+      .in("id", clientIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        data.forEach(c => { if (c.vehicle_label) map[c.id] = c.vehicle_label; });
+        setVehicleLabels(map);
+      });
+  }, [logs]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
@@ -199,6 +218,7 @@ export const BotLogsEnhanced = ({
                   <TableHead className="w-[140px]">Hora</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Contato</TableHead>
+                  <TableHead className="hidden md:table-cell">Veículo</TableHead>
                   <TableHead className="hidden md:table-cell">Mensagem</TableHead>
                   <TableHead className="text-center">Lead?</TableHead>
                   <TableHead>Status</TableHead>
@@ -208,7 +228,7 @@ export const BotLogsEnhanced = ({
               <TableBody>
                 {!filteredLogs.length ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                       <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
                       {hasActiveFilters ? "Nenhum log encontrado com esses filtros" : "Nenhum log registrado ainda"}
                     </TableCell>
@@ -229,6 +249,9 @@ export const BotLogsEnhanced = ({
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium truncate max-w-[120px]">{log.contact_name || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground truncate max-w-[120px]">
+                        {(log.client_id && vehicleLabels[log.client_id]) || "—"}
+                      </TableCell>
                       <TableCell className="hidden md:table-cell text-xs text-muted-foreground truncate max-w-[200px]">
                         {log.message_in || log.message_out || "—"}
                       </TableCell>
