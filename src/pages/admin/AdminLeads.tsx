@@ -437,8 +437,11 @@ const AdminLeads = () => {
               <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${tempBadge[client.temperature]}`}>
                 {client.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 flex items-center gap-2">
                 <p className="text-sm font-medium truncate">{client.name}</p>
+                {client._noPhone && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-warning/15 text-warning shrink-0">📱 Aguardando telefone</span>
+                )}
               </div>
               <span className={`text-[9px] px-1.5 py-0.5 rounded-full shrink-0 hidden sm:inline ${sourceBadge[client.source || "funnel"]}`}>
                 {sourceLabel[client.source || ""] || client.source || "Funil"}
