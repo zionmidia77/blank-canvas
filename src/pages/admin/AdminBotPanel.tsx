@@ -60,8 +60,8 @@ type BotLog = {
 const getHeartbeatStatus = (lastHeartbeat: string | null) => {
   if (!lastHeartbeat) return { color: "bg-destructive", label: "Nunca conectou", bgClass: "bg-destructive/10" };
   const diffMin = (Date.now() - new Date(lastHeartbeat).getTime()) / 60000;
-  if (diffMin < 5) return { color: "bg-green-500", label: `Visto ${formatDistanceToNow(new Date(lastHeartbeat), { locale: ptBR, addSuffix: true })}`, bgClass: "bg-green-500/10" };
-  if (diffMin < 15) return { color: "bg-yellow-500", label: `Visto ${formatDistanceToNow(new Date(lastHeartbeat), { locale: ptBR, addSuffix: true })}`, bgClass: "bg-yellow-500/10" };
+  if (diffMin < 2) return { color: "bg-green-500", label: `Online — visto ${formatDistanceToNow(new Date(lastHeartbeat), { locale: ptBR, addSuffix: true })}`, bgClass: "bg-green-500/10" };
+  if (diffMin < 10) return { color: "bg-yellow-500", label: `Visto ${formatDistanceToNow(new Date(lastHeartbeat), { locale: ptBR, addSuffix: true })}`, bgClass: "bg-yellow-500/10" };
   return { color: "bg-destructive", label: `Offline — visto ${formatDistanceToNow(new Date(lastHeartbeat), { locale: ptBR, addSuffix: true })}`, bgClass: "bg-destructive/10" };
 };
 
