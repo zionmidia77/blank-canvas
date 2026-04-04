@@ -290,6 +290,48 @@ const AdminBotPanel = () => {
           {configs && configs.length > 0 && (
             <BotUptimeHistory configs={configs} />
           )}
+
+          {/* Posting History */}
+          {postingHistory && postingHistory.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Package className="w-4 h-4 text-primary" /> Histórico de Postagens por Dia
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bot</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead className="text-right">Postados</TableHead>
+                      <TableHead>Primeiro Post</TableHead>
+                      <TableHead>Último Post</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {postingHistory.map((row: any, i: number) => {
+                      const botName = configs?.find((c) => c.id === row.bot_config_id)?.seller_name || row.bot_id?.slice(0, 8) || "—";
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium text-sm">{botName}</TableCell>
+                          <TableCell className="text-sm">{row.dia}</TableCell>
+                          <TableCell className="text-right font-bold text-sm">{row.total_postados}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {row.primeiro_post ? new Date(row.primeiro_post).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {row.ultimo_post ? new Date(row.ultimo_post).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Bots Tab */}
