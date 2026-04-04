@@ -50,6 +50,24 @@ export const BotLogsEnhanced = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
   const [detailLog, setDetailLog] = useState<BotLog | null>(null);
+  const [vehicleLabels, setVehicleLabels] = useState<Record<string, string>>({});
+
+  // Fetch vehicle_label for logs that have client_id
+  useEffect(() => {
+    if (!logs?.length) return;
+    const clientIds = [...new Set(logs.filter(l => l.client_id).map(l => l.client_id!))];
+    if (!clientIds.length) return;
+    supabase
+      .from("clients")
+      .select("id, vehicle_label")
+      .in("id", clientIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        data.forEach(c => { if (c.vehicle_label) map[c.id] = c.vehicle_label; });
+        setVehicleLabels(map);
+      });
+  }, [logs]);
 
   const filteredLogs = useMemo(() => {
     if (!logs) return [];
