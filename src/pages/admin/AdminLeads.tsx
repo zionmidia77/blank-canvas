@@ -582,7 +582,13 @@ const AdminLeads = () => {
                     </Button>
                   </>
                 )}
+                {(client as any).conv_id && (
+                  <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 h-8 text-blue-400 border-blue-400/30" onClick={() => window.open(`https://www.facebook.com/messages/t/${(client as any).conv_id}`, "_blank")}>
+                    <ExternalLink className="w-3.5 h-3.5" /> Conversa FB
+                  </Button>
+                )}
                 <Button size="sm" variant="outline" className="rounded-full text-xs gap-1 h-8" onClick={() => navigate(`/admin/calendar?client=${client.id}&name=${encodeURIComponent(client.name)}`)}>
+
                   <CalendarPlus className="w-3.5 h-3.5" /> Agendar
                 </Button>
                 <Button size="sm" variant="ghost" className="rounded-full text-xs gap-1 h-8" onClick={() => navigate(`/admin/client/${client.id}`)}>
