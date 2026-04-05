@@ -460,6 +460,11 @@ const AdminLeads = () => {
                     <MessageCircle className="w-3.5 h-3.5" />
                   </Button>
                 )}
+                {(client as any).conv_id && (
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 rounded-full text-blue-400" title="Ver conversa no Facebook" onClick={(e) => { e.stopPropagation(); window.open(`https://www.facebook.com/messages/t/${(client as any).conv_id}`, "_blank"); }}>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Button>
+                )}
                 <Button size="sm" variant="ghost" className="h-7 w-7 p-0 rounded-full" onClick={(e) => { e.stopPropagation(); navigate(`/admin/client/${client.id}`); }}>
                   <Eye className="w-3.5 h-3.5" />
                 </Button>
