@@ -230,6 +230,19 @@ export const PostingQueueEnhanced = ({
                     <p className="text-xs text-muted-foreground">{selectedVehicles.length} de {stockVehicles?.length || 0} selecionados</p>
                   </div>
                   <div className="space-y-2">
+                    <Label>Perfil que vai postar *</Label>
+                    <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o perfil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {botProfiles.map((bot) => (
+                          <SelectItem key={bot.id} value={bot.id}>{bot.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label>Horário (opcional — vazio = agora)</Label>
                     <Input
                       type="datetime-local"
@@ -239,10 +252,11 @@ export const PostingQueueEnhanced = ({
                   </div>
                   <Button
                     className="w-full"
-                    disabled={!selectedVehicles.length || schedulePosting.isPending}
+                    disabled={!selectedVehicles.length || !selectedBotId || schedulePosting.isPending}
                     onClick={() => schedulePosting.mutate({
                       vehicleIds: selectedVehicles,
                       scheduledFor: scheduleTime ? new Date(scheduleTime).toISOString() : null,
+                      botId: selectedBotId,
                     })}
                   >
                     {schedulePosting.isPending ? "Agendando..." : `Agendar ${selectedVehicles.length} veículo(s)`}
