@@ -165,6 +165,7 @@ export type Database = {
       bot_posting_queue: {
         Row: {
           bot_config_id: string | null
+          bot_id: string | null
           created_at: string
           error_msg: string | null
           id: string
@@ -177,6 +178,7 @@ export type Database = {
         }
         Insert: {
           bot_config_id?: string | null
+          bot_id?: string | null
           created_at?: string
           error_msg?: string | null
           id?: string
@@ -189,6 +191,7 @@ export type Database = {
         }
         Update: {
           bot_config_id?: string | null
+          bot_id?: string | null
           created_at?: string
           error_msg?: string | null
           id?: string
