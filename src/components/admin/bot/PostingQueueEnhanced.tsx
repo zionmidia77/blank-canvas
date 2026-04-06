@@ -38,9 +38,15 @@ export const PostingQueueEnhanced = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedVehicles, setSelectedVehicles] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState("");
+  const [selectedBotId, setSelectedBotId] = useState<string>("");
+
+  const botProfiles = [
+    { id: "1e21e46c-8887-4396-8be4-4b02a9ba7b37", label: "Arsenal Motors (armazemshoppecas@gmail.com)" },
+    { id: "bce20b92-5385-4715-99d0-658305d99dcc", label: "MotoRide (motoridesc@gmail.com)" },
+  ];
 
   const schedulePosting = useMutation({
-    mutationFn: async ({ vehicleIds, scheduledFor }: { vehicleIds: string[]; scheduledFor: string | null }) => {
+    mutationFn: async ({ vehicleIds, scheduledFor, botId }: { vehicleIds: string[]; scheduledFor: string | null; botId: string }) => {
       const items = vehicleIds.map((vehicleId) => {
         const vehicle = stockVehicles?.find((v) => v.id === vehicleId);
         if (!vehicle?.local_bot_id) throw new Error(`Veículo sem local_bot_id: ${vehicleId}`);
@@ -48,6 +54,7 @@ export const PostingQueueEnhanced = ({
           vehicle_id: vehicleId,
           local_bot_id: vehicle.local_bot_id,
           scheduled_for: scheduledFor || new Date().toISOString(),
+          bot_id: botId,
         };
       });
       const { error } = await supabase.from("bot_posting_queue" as any).insert(items as any);
@@ -58,6 +65,7 @@ export const PostingQueueEnhanced = ({
       setScheduleOpen(false);
       setSelectedVehicles([]);
       setScheduleTime("");
+      setSelectedBotId("");
       toast.success("Postagens agendadas!");
     },
     onError: (e: any) => toast.error(e.message),
@@ -222,6 +230,19 @@ export const PostingQueueEnhanced = ({
                     <p className="text-xs text-muted-foreground">{selectedVehicles.length} de {stockVehicles?.length || 0} selecionados</p>
                   </div>
                   <div className="space-y-2">
+                    <Label>Perfil que vai postar *</Label>
+                    <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o perfil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {botProfiles.map((bot) => (
+                          <SelectItem key={bot.id} value={bot.id}>{bot.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <Label>Horário (opcional — vazio = agora)</Label>
                     <Input
                       type="datetime-local"
@@ -231,10 +252,11 @@ export const PostingQueueEnhanced = ({
                   </div>
                   <Button
                     className="w-full"
-                    disabled={!selectedVehicles.length || schedulePosting.isPending}
+                    disabled={!selectedVehicles.length || !selectedBotId || schedulePosting.isPending}
                     onClick={() => schedulePosting.mutate({
                       vehicleIds: selectedVehicles,
                       scheduledFor: scheduleTime ? new Date(scheduleTime).toISOString() : null,
+                      botId: selectedBotId,
                     })}
                   >
                     {schedulePosting.isPending ? "Agendando..." : `Agendar ${selectedVehicles.length} veículo(s)`}
