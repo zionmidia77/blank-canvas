@@ -197,6 +197,19 @@ export const PostingQueueEnhanced = ({
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <Label>Perfil que vai postar: *</Label>
+                    <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o perfil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {botProfiles.map((bot) => (
+                          <SelectItem key={bot.id} value={bot.id}>{bot.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>Veículos *</Label>
                       <Button
@@ -228,19 +241,6 @@ export const PostingQueueEnhanced = ({
                       ))}
                     </ScrollArea>
                     <p className="text-xs text-muted-foreground">{selectedVehicles.length} de {stockVehicles?.length || 0} selecionados</p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Perfil que vai postar *</Label>
-                    <Select value={selectedBotId} onValueChange={setSelectedBotId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o perfil" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {botProfiles.map((bot) => (
-                          <SelectItem key={bot.id} value={bot.id}>{bot.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Horário (opcional — vazio = agora)</Label>
