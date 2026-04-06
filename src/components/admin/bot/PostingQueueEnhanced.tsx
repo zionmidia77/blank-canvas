@@ -46,7 +46,7 @@ export const PostingQueueEnhanced = ({
   ];
 
   const schedulePosting = useMutation({
-    mutationFn: async ({ vehicleIds, scheduledFor }: { vehicleIds: string[]; scheduledFor: string | null }) => {
+    mutationFn: async ({ vehicleIds, scheduledFor, botId }: { vehicleIds: string[]; scheduledFor: string | null; botId: string }) => {
       const items = vehicleIds.map((vehicleId) => {
         const vehicle = stockVehicles?.find((v) => v.id === vehicleId);
         if (!vehicle?.local_bot_id) throw new Error(`Veículo sem local_bot_id: ${vehicleId}`);
@@ -54,6 +54,7 @@ export const PostingQueueEnhanced = ({
           vehicle_id: vehicleId,
           local_bot_id: vehicle.local_bot_id,
           scheduled_for: scheduledFor || new Date().toISOString(),
+          bot_id: botId,
         };
       });
       const { error } = await supabase.from("bot_posting_queue" as any).insert(items as any);
