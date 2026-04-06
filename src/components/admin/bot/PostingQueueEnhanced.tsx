@@ -65,6 +65,7 @@ export const PostingQueueEnhanced = ({
       setScheduleOpen(false);
       setSelectedVehicles([]);
       setScheduleTime("");
+      setSelectedBotId("");
       toast.success("Postagens agendadas!");
     },
     onError: (e: any) => toast.error(e.message),
