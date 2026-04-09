@@ -147,13 +147,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bot_logs_bot_config_id_fkey"
-            columns: ["bot_config_id"]
-            isOneToOne: false
-            referencedRelation: "posting_history_daily"
-            referencedColumns: ["bot_config_id"]
-          },
-          {
             foreignKeyName: "bot_logs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
@@ -209,13 +202,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bot_configs"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bot_posting_queue_bot_config_id_fkey"
-            columns: ["bot_config_id"]
-            isOneToOne: false
-            referencedRelation: "posting_history_daily"
-            referencedColumns: ["bot_config_id"]
           },
           {
             foreignKeyName: "bot_posting_queue_vehicle_id_fkey"
@@ -708,13 +694,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "bot_configs"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "clients_bot_config_id_fkey"
-            columns: ["bot_config_id"]
-            isOneToOne: false
-            referencedRelation: "posting_history_daily"
-            referencedColumns: ["bot_config_id"]
           },
           {
             foreignKeyName: "clients_referred_by_fkey"
@@ -1297,13 +1276,6 @@ export type Database = {
             referencedRelation: "bot_configs"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "posting_presets_bot_config_id_fkey"
-            columns: ["bot_config_id"]
-            isOneToOne: false
-            referencedRelation: "posting_history_daily"
-            referencedColumns: ["bot_config_id"]
-          },
         ]
       }
       referrals: {
@@ -1745,7 +1717,15 @@ export type Database = {
           total_postados: number | null
           ultimo_post: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bot_posting_queue_bot_config_id_fkey"
+            columns: ["bot_config_id"]
+            isOneToOne: false
+            referencedRelation: "bot_configs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
