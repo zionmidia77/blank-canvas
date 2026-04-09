@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode } from "lucide-react";
+import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { VehicleCardSkeleton } from "@/components/admin/SkeletonLoaders";
 import VehicleFormDialog from "@/components/catalog/VehicleFormDialog";
@@ -25,6 +26,40 @@ import { ptBR } from "date-fns/locale";
 import PageTour from "@/components/admin/PageTour";
 import { Package as PackageIcon, Camera as CameraIcon, DollarSign as DollarIcon, Search as SearchIcon2 } from "lucide-react";
 
+// ── Lightbox with carousel + zoom ──
+const AdminPhotoLightbox = ({ photos, initialIndex, open, onClose }: { photos: string[]; initialIndex: number; open: boolean; onClose: () => void }) => {
+  const [index, setIndex] = useState(initialIndex);
+  const [zoomed, setZoomed] = useState(false);
+  const prev = useCallback(() => { setIndex(i => (i > 0 ? i - 1 : photos.length - 1)); setZoomed(false); }, [photos.length]);
+  const next = useCallback(() => { setIndex(i => (i < photos.length - 1 ? i + 1 : 0)); setZoomed(false); }, [photos.length]);
+  if (!open) return null;
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-black/95 overflow-hidden">
+        <div className="relative w-full h-[85vh] flex items-center justify-center">
+          <button onClick={onClose} className="absolute top-3 right-3 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><X className="h-5 w-5" /></button>
+          <div className="absolute top-3 left-3 z-50 px-3 py-1 rounded-full bg-black/50 text-white text-sm flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> {index + 1}/{photos.length}</div>
+          {photos.length > 1 && <button onClick={prev} className="absolute left-2 z-40 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><ChevronLeft className="h-6 w-6" /></button>}
+          <AnimatePresence mode="wait">
+            <motion.img key={photos[index]} src={photos[index]} alt={`Foto ${index + 1}`} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className={`max-h-full max-w-full object-contain cursor-pointer transition-transform duration-300 ${zoomed ? "scale-150" : ""}`} onClick={() => setZoomed(z => !z)} />
+          </AnimatePresence>
+          {photos.length > 1 && <button onClick={next} className="absolute right-2 z-40 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><ChevronRight className="h-6 w-6" /></button>}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-black/50 text-white/70 text-xs"><ZoomIn className="h-3 w-3" /> Clique para {zoomed ? "reduzir" : "ampliar"}</div>
+          {photos.length > 1 && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5 max-w-[80vw] overflow-x-auto p-1">
+              {photos.map((p, i) => (
+                <button key={i} onClick={() => { setIndex(i); setZoomed(false); }} className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition ${i === index ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"}`}>
+                  <img src={p} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const AdminCatalog = () => {
   const [activeTab, setActiveTab] = useState("catalog");
   const [search, setSearch] = useState("");
@@ -32,6 +67,8 @@ const AdminCatalog = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [showOCR, setShowOCR] = useState(false);
+  const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: vehicles = [], isLoading } = useQuery({
@@ -208,12 +245,32 @@ const AdminCatalog = () => {
             return (
               <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Photo */}
-                <div className="h-48 bg-muted relative">
+                <div className="h-48 bg-muted relative group/photo cursor-pointer"
+                  onClick={() => {
+                    const allPhotos = coverPhoto
+                      ? [coverPhoto, ...photos.filter((p: string) => p !== coverPhoto)]
+                      : photos;
+                    if (allPhotos.length > 0) {
+                      setLightboxPhotos(allPhotos);
+                      setLightboxOpen(true);
+                    }
+                  }}
+                >
                   {coverPhoto ? (
-                    <img src={coverPhoto} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover" />
+                    <img src={coverPhoto} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <Package className="h-12 w-12" />
+                    </div>
+                  )}
+                  {photos.length > 1 && (
+                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 text-white text-xs">
+                      <Camera className="h-3 w-3" /> {photos.length} fotos
+                    </div>
+                  )}
+                  {coverPhoto && (
+                    <div className="absolute inset-0 bg-black/0 group-hover/photo:bg-black/20 transition flex items-center justify-center">
+                      <Eye className="h-8 w-8 text-white opacity-0 group-hover/photo:opacity-100 transition" />
                     </div>
                   )}
                   <div className="absolute top-2 right-2 flex gap-1">
@@ -223,7 +280,7 @@ const AdminCatalog = () => {
                   </div>
                   {days > 0 && (
                     <div className="absolute bottom-2 left-2">
-                      <Badge variant="outline" className={`bg-background/80 ${days > 30 ? "text-red-500 border-red-500" : days > 15 ? "text-yellow-500 border-yellow-500" : ""}`}>
+                      <Badge variant="outline" className={`bg-background/80 ${days > 30 ? "text-destructive border-destructive" : days > 15 ? "text-yellow-500 border-yellow-500" : ""}`}>
                         <Clock className="h-3 w-3 mr-1" /> {days} dias
                       </Badge>
                     </div>
@@ -352,6 +409,9 @@ const AdminCatalog = () => {
           setShowForm(true);
         }}
       />
+
+
+      <AdminPhotoLightbox photos={lightboxPhotos} initialIndex={0} open={lightboxOpen} onClose={() => setLightboxOpen(false)} />
     </div>
   );
 };
