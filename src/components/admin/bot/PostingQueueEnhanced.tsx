@@ -44,6 +44,7 @@ export const PostingQueueEnhanced = ({
     { id: "1e21e46c-8887-4396-8be4-4b02a9ba7b37", label: "Arsenal Motors (armazemshoppecas@gmail.com)" },
     { id: "bce20b92-5385-4715-99d0-658305d99dcc", label: "MotoRide (motoridesc@gmail.com)" },
     { id: "a28c2281-f5a6-4ba3-a9d5-a9513696ab59", label: "Juciane (jucianecorrea@hotmail.com)" },
+    { id: "1efec7a8-8aea-4f80-a38e-d07af19af70a", label: "Jota (facebook4-jota)" },
   ];
 
   const schedulePosting = useMutation({
