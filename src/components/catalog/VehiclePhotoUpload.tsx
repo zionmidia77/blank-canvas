@@ -22,12 +22,46 @@ const VehiclePhotoUpload = ({
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w);
+          w = maxWidth;
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas not supported")); return; }
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error("Compression failed")),
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Failed to load image")); };
+      img.src = url;
+    });
+  };
+
   const uploadSinglePhoto = async (file: File) => {
-    const ext = file.name.split(".").pop();
-    const fileName = `${vehicleId || "temp"}-${crypto.randomUUID()}.${ext}`;
+    let uploadBlob: Blob | File = file;
+    try {
+      uploadBlob = await compressImage(file);
+    } catch {
+      // fallback to original file if compression fails
+    }
+    const fileName = `${vehicleId || "temp"}-${crypto.randomUUID()}.jpg`;
     const { data, error } = await supabase.storage
       .from("vehicle-photos")
-      .upload(fileName, file, { upsert: true });
+      .upload(fileName, uploadBlob, { upsert: true, contentType: "image/jpeg" });
     if (error) throw error;
     const { data: urlData } = supabase.storage
       .from("vehicle-photos")
@@ -48,7 +82,12 @@ const VehiclePhotoUpload = ({
     }
     setUploading(true);
     try {
-      const uploadedUrls = await Promise.all(selected.map((file) => uploadSinglePhoto(file)));
+      // Upload one at a time to avoid mobile memory issues
+      const uploadedUrls: string[] = [];
+      for (const file of selected) {
+        const url = await uploadSinglePhoto(file);
+        uploadedUrls.push(url);
+      }
       const dedupedPhotos = [...new Set([...photos, ...uploadedUrls])];
       onPhotosChange(dedupedPhotos);
       if (!coverPhoto || !dedupedPhotos.includes(coverPhoto)) {
