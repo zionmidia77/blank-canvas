@@ -245,12 +245,32 @@ const AdminCatalog = () => {
             return (
               <Card key={vehicle.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Photo */}
-                <div className="h-48 bg-muted relative">
+                <div className="h-48 bg-muted relative group/photo cursor-pointer"
+                  onClick={() => {
+                    const allPhotos = coverPhoto
+                      ? [coverPhoto, ...photos.filter((p: string) => p !== coverPhoto)]
+                      : photos;
+                    if (allPhotos.length > 0) {
+                      setLightboxPhotos(allPhotos);
+                      setLightboxOpen(true);
+                    }
+                  }}
+                >
                   {coverPhoto ? (
-                    <img src={coverPhoto} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover" />
+                    <img src={coverPhoto} alt={`${vehicle.brand} ${vehicle.model}`} className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                       <Package className="h-12 w-12" />
+                    </div>
+                  )}
+                  {photos.length > 1 && (
+                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 text-white text-xs">
+                      <Camera className="h-3 w-3" /> {photos.length} fotos
+                    </div>
+                  )}
+                  {coverPhoto && (
+                    <div className="absolute inset-0 bg-black/0 group-hover/photo:bg-black/20 transition flex items-center justify-center">
+                      <Eye className="h-8 w-8 text-white opacity-0 group-hover/photo:opacity-100 transition" />
                     </div>
                   )}
                   <div className="absolute top-2 right-2 flex gap-1">
@@ -260,7 +280,7 @@ const AdminCatalog = () => {
                   </div>
                   {days > 0 && (
                     <div className="absolute bottom-2 left-2">
-                      <Badge variant="outline" className={`bg-background/80 ${days > 30 ? "text-red-500 border-red-500" : days > 15 ? "text-yellow-500 border-yellow-500" : ""}`}>
+                      <Badge variant="outline" className={`bg-background/80 ${days > 30 ? "text-destructive border-destructive" : days > 15 ? "text-yellow-500 border-yellow-500" : ""}`}>
                         <Clock className="h-3 w-3 mr-1" /> {days} dias
                       </Badge>
                     </div>
