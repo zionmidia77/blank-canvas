@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -18,6 +19,10 @@ interface Props {
 }
 
 const BUCKET = "veiculos";
+const SUPABASE_URL = "https://baxpayrwcfdoapnihwhk.supabase.co";
+const supabaseAdmin = createClient(SUPABASE_URL, "sb_secret_EeAS3XJw2CQ0WmMyoDUsvQ_AQlmeR49");
+
+const getFriendlyName = (path: string) => path.split("/").pop() || path;
 
 const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
@@ -27,7 +32,6 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  // 1. List all vehicles from vehicle_foto_rotacao
   const { data: vehicles = [], isLoading: loadingVehicles } = useQuery({
     queryKey: ["foto-rotacao-vehicles"],
     queryFn: async () => {
@@ -46,40 +50,39 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
     ? (currentVehicle.pastas as string[] ?? [])
     : [];
 
-  // 2. List photos in a folder
+  // List photos — use folder path directly (already includes vehicle_id)
   const { data: photos = [], isLoading: loadingPhotos } = useQuery({
-    queryKey: ["folder-photos", selectedVehicle, selectedFolder],
+    queryKey: ["folder-photos", selectedFolder],
     queryFn: async () => {
-      const path = `${selectedVehicle}/${selectedFolder}`;
-      const { data, error } = await supabase.storage.from(BUCKET).list(path);
+      const { data, error } = await supabaseAdmin.storage.from(BUCKET).list(selectedFolder!);
       if (error) throw error;
       return (data || [])
         .filter((f) => f.name && !f.name.startsWith("."))
         .map((f) => ({
           name: f.name,
-          url: supabase.storage.from(BUCKET).getPublicUrl(`${path}/${f.name}`).data.publicUrl,
+          url: supabaseAdmin.storage.from(BUCKET).getPublicUrl(`${selectedFolder}/${f.name}`).data.publicUrl,
         }));
     },
-    enabled: !!selectedVehicle && !!selectedFolder,
+    enabled: !!selectedFolder,
   });
 
-  // 3. Upload photos
+  // Upload — path is folder directly
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files?.length || !selectedVehicle || !selectedFolder) return;
+    if (!files?.length || !selectedFolder) return;
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
         const fileName = `${crypto.randomUUID()}.jpg`;
-        const path = `${selectedVehicle}/${selectedFolder}/${fileName}`;
-        const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+        const path = `${selectedFolder}/${fileName}`;
+        const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, {
           upsert: true,
           contentType: file.type || "image/jpeg",
         });
         if (error) throw error;
       }
       toast.success(`${files.length} foto(s) enviada(s)!`);
-      queryClient.invalidateQueries({ queryKey: ["folder-photos", selectedVehicle, selectedFolder] });
+      queryClient.invalidateQueries({ queryKey: ["folder-photos", selectedFolder] });
     } catch (err: any) {
       toast.error(`Erro no upload: ${err.message}`);
     } finally {
@@ -88,24 +91,25 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
     }
   };
 
-  // 4. Delete photo
+  // Delete photo
   const deletePhotoMut = useMutation({
     mutationFn: async (name: string) => {
-      const path = `${selectedVehicle}/${selectedFolder}/${name}`;
-      const { error } = await supabase.storage.from(BUCKET).remove([path]);
+      const path = `${selectedFolder}/${name}`;
+      const { error } = await supabaseAdmin.storage.from(BUCKET).remove([path]);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["folder-photos", selectedVehicle, selectedFolder] });
+      queryClient.invalidateQueries({ queryKey: ["folder-photos", selectedFolder] });
       toast.success("Foto excluída!");
     },
     onError: (err: any) => toast.error(err.message),
   });
 
-  // 5. Add folder
+  // Add folder — store full path (vehicle_id/folderName)
   const addFolder = async () => {
     if (!newFolderName.trim() || !selectedVehicle) return;
-    const updated = [...folders, newFolderName.trim()];
+    const fullPath = `${selectedVehicle}/${newFolderName.trim()}`;
+    const updated = [...folders, fullPath];
     const { error } = await supabase
       .from("vehicle_foto_rotacao")
       .update({ pastas: updated as any })
@@ -116,17 +120,14 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
     toast.success("Pasta criada!");
   };
 
-  // 6. Delete folder (remove from array + delete storage files)
+  // Delete folder
   const deleteFolder = async (folder: string) => {
-    if (!confirm(`Excluir a pasta "${folder}" e todas as fotos?`)) return;
+    if (!confirm(`Excluir a pasta "${getFriendlyName(folder)}" e todas as fotos?`)) return;
     if (!selectedVehicle) return;
-    // delete all files in folder
-    const path = `${selectedVehicle}/${folder}`;
-    const { data: files } = await supabase.storage.from(BUCKET).list(path);
+    const { data: files } = await supabaseAdmin.storage.from(BUCKET).list(folder);
     if (files?.length) {
-      await supabase.storage.from(BUCKET).remove(files.map((f) => `${path}/${f.name}`));
+      await supabaseAdmin.storage.from(BUCKET).remove(files.map((f) => `${folder}/${f.name}`));
     }
-    // update pastas array
     const updated = folders.filter((f) => f !== folder);
     await supabase
       .from("vehicle_foto_rotacao")
@@ -143,7 +144,7 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
   };
 
   const title = selectedFolder
-    ? `${selectedVehicle} / ${selectedFolder}`
+    ? `${selectedVehicle} / ${getFriendlyName(selectedFolder)}`
     : selectedVehicle
       ? `Pastas de ${selectedVehicle}`
       : "Gerenciar Fotos (Bot)";
@@ -163,7 +164,6 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-2">
-          {/* Level 1: Vehicle list */}
           {!selectedVehicle && (
             <div className="space-y-2">
               {loadingVehicles ? (
@@ -188,7 +188,6 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
             </div>
           )}
 
-          {/* Level 2: Folder list */}
           {selectedVehicle && !selectedFolder && (
             <div className="space-y-3">
               <div className="flex gap-2">
@@ -212,7 +211,7 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
                       className="flex-1 flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent transition text-left"
                     >
                       <FolderOpen className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{folder}</span>
+                      <span className="font-medium">{getFriendlyName(folder)}</span>
                     </button>
                     <Button size="icon" variant="destructive" className="h-9 w-9 shrink-0" onClick={() => deleteFolder(folder)}>
                       <Trash2 className="h-4 w-4" />
@@ -223,7 +222,6 @@ const VehiclePhotoManager = ({ open, onOpenChange }: Props) => {
             </div>
           )}
 
-          {/* Level 3: Photo grid */}
           {selectedVehicle && selectedFolder && (
             <div className="space-y-4">
               <div className="flex gap-2">
