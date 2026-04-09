@@ -67,6 +67,8 @@ const AdminCatalog = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [showOCR, setShowOCR] = useState(false);
+  const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: vehicles = [], isLoading } = useQuery({
