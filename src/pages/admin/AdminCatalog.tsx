@@ -409,6 +409,9 @@ const AdminCatalog = () => {
           setShowForm(true);
         }}
       />
+
+
+      <AdminPhotoLightbox photos={lightboxPhotos} initialIndex={0} open={lightboxOpen} onClose={() => setLightboxOpen(false)} />
     </div>
   );
 };
