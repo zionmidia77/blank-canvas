@@ -26,6 +26,40 @@ import { ptBR } from "date-fns/locale";
 import PageTour from "@/components/admin/PageTour";
 import { Package as PackageIcon, Camera as CameraIcon, DollarSign as DollarIcon, Search as SearchIcon2 } from "lucide-react";
 
+// ── Lightbox with carousel + zoom ──
+const AdminPhotoLightbox = ({ photos, initialIndex, open, onClose }: { photos: string[]; initialIndex: number; open: boolean; onClose: () => void }) => {
+  const [index, setIndex] = useState(initialIndex);
+  const [zoomed, setZoomed] = useState(false);
+  const prev = useCallback(() => { setIndex(i => (i > 0 ? i - 1 : photos.length - 1)); setZoomed(false); }, [photos.length]);
+  const next = useCallback(() => { setIndex(i => (i < photos.length - 1 ? i + 1 : 0)); setZoomed(false); }, [photos.length]);
+  if (!open) return null;
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-black/95 overflow-hidden">
+        <div className="relative w-full h-[85vh] flex items-center justify-center">
+          <button onClick={onClose} className="absolute top-3 right-3 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><X className="h-5 w-5" /></button>
+          <div className="absolute top-3 left-3 z-50 px-3 py-1 rounded-full bg-black/50 text-white text-sm flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> {index + 1}/{photos.length}</div>
+          {photos.length > 1 && <button onClick={prev} className="absolute left-2 z-40 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><ChevronLeft className="h-6 w-6" /></button>}
+          <AnimatePresence mode="wait">
+            <motion.img key={photos[index]} src={photos[index]} alt={`Foto ${index + 1}`} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.2 }} className={`max-h-full max-w-full object-contain cursor-pointer transition-transform duration-300 ${zoomed ? "scale-150" : ""}`} onClick={() => setZoomed(z => !z)} />
+          </AnimatePresence>
+          {photos.length > 1 && <button onClick={next} className="absolute right-2 z-40 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition"><ChevronRight className="h-6 w-6" /></button>}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 px-3 py-1 rounded-full bg-black/50 text-white/70 text-xs"><ZoomIn className="h-3 w-3" /> Clique para {zoomed ? "reduzir" : "ampliar"}</div>
+          {photos.length > 1 && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5 max-w-[80vw] overflow-x-auto p-1">
+              {photos.map((p, i) => (
+                <button key={i} onClick={() => { setIndex(i); setZoomed(false); }} className={`flex-shrink-0 w-12 h-12 rounded-md overflow-hidden border-2 transition ${i === index ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"}`}>
+                  <img src={p} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const AdminCatalog = () => {
   const [activeTab, setActiveTab] = useState("catalog");
   const [search, setSearch] = useState("");
