@@ -43,6 +43,7 @@ export const PostingQueueEnhanced = ({
   const botProfiles = [
     { id: "1e21e46c-8887-4396-8be4-4b02a9ba7b37", label: "Arsenal Motors (armazemshoppecas@gmail.com)" },
     { id: "bce20b92-5385-4715-99d0-658305d99dcc", label: "MotoRide (motoridesc@gmail.com)" },
+    { id: "a28c2281-f5a6-4ba3-a9d5-a9513696ab59", label: "Juciane (jucianecorrea@hotmail.com)" },
   ];
 
   const schedulePosting = useMutation({
