@@ -68,7 +68,7 @@ const MergeLeadsDialog = ({ open, onOpenChange, selectedLeads, onComplete }: Mer
       if (Object.keys(updates).length > 0) {
         const { error } = await supabase
           .from("clients")
-          .update(updates)
+          .update(updates as any)
           .eq("id", primaryId);
         if (error) throw error;
       }
