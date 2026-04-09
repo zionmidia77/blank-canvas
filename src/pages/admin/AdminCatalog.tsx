@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode, ChevronLeft, ChevronRight, X, ZoomIn, FolderOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { VehicleCardSkeleton } from "@/components/admin/SkeletonLoaders";
@@ -20,6 +20,7 @@ import VehiclePhotoUpload from "@/components/catalog/VehiclePhotoUpload";
 import VehicleCostManager from "@/components/catalog/VehicleCostManager";
 import FipeLookup from "@/components/catalog/FipeLookup";
 import VehicleDocOCR from "@/components/catalog/VehicleDocOCR";
+import VehiclePhotoManager from "@/components/catalog/VehiclePhotoManager";
 import StockFinancialDashboard from "@/components/catalog/StockFinancialDashboard";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -67,6 +68,7 @@ const AdminCatalog = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [showOCR, setShowOCR] = useState(false);
+  const [showPhotoManager, setShowPhotoManager] = useState(false);
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -133,6 +135,9 @@ const AdminCatalog = () => {
               <TabsTrigger value="dashboard">📊 Financeiro</TabsTrigger>
             </TabsList>
           </Tabs>
+          <Button onClick={() => setShowPhotoManager(true)} variant="outline" className="gap-2">
+            <FolderOpen className="h-4 w-4" /> Gerenciar Fotos
+          </Button>
           <Button onClick={() => setShowOCR(true)} variant="outline" className="gap-2">
             <Camera className="h-4 w-4" /> Cadastro por Foto
           </Button>
@@ -412,6 +417,7 @@ const AdminCatalog = () => {
 
 
       <AdminPhotoLightbox photos={lightboxPhotos} initialIndex={0} open={lightboxOpen} onClose={() => setLightboxOpen(false)} />
+      <VehiclePhotoManager open={showPhotoManager} onOpenChange={setShowPhotoManager} />
     </div>
   );
 };
