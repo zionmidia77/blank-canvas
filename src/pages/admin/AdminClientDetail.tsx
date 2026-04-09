@@ -687,35 +687,6 @@ const AdminClientDetail = () => {
           </AccordionContent>
         </AccordionItem>
 
-        {/* 🤝 Indicações */}
-        <AccordionItem value="referral" className="glass-card rounded-xl border-none overflow-hidden">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline text-sm font-medium gap-2">
-            <span className="flex items-center gap-2"><Star className="w-4 h-4 text-primary" /> Indicações</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <ReferralSection client={client} />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* ⭐ NPS */}
-        <AccordionItem value="nps" className="glass-card rounded-xl border-none overflow-hidden">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline text-sm font-medium gap-2">
-            <span className="flex items-center gap-2">⭐ NPS</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <NPSSection client={client} />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* 📊 Relatório */}
-        <AccordionItem value="report" className="glass-card rounded-xl border-none overflow-hidden">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline text-sm font-medium gap-2">
-            <span className="flex items-center gap-2">📊 Relatório do cliente</span>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <ClientReportSection client={client} vehicles={vehicles} />
-          </AccordionContent>
-        </AccordionItem>
 
         {/* 🎁 Ofertas */}
         <AccordionItem value="offers" className="glass-card rounded-xl border-none overflow-hidden">
