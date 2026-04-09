@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode } from "lucide-react";
+import { Plus, Camera, Search, Package, DollarSign, Clock, TrendingUp, Trash2, Edit, Eye, QrCode, ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { VehicleCardSkeleton } from "@/components/admin/SkeletonLoaders";
 import VehicleFormDialog from "@/components/catalog/VehicleFormDialog";
