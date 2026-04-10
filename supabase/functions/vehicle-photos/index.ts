@@ -56,8 +56,8 @@ serve(async (req) => {
 
       if (!vehicleId || !day || !file) return json({ ok: false, error: "vehicle_id, day, and file required" });
 
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `${crypto.randomUUID()}.${ext}`;
+      // Preserve original filename instead of generating UUID
+      const fileName = file.name;
       const path = `${vehicleId}/local_${day}/${fileName}`;
 
       const { error } = await supabaseAdmin.storage.from(BUCKET).upload(path, file, {
