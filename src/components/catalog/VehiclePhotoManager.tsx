@@ -16,6 +16,7 @@ import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-p
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** local_bot_id do veículo, ex: "v1", "v13" */
   vehicleId?: string | null;
 }
 
