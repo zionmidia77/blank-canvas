@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +18,19 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   /** local_bot_id do veículo, ex: "v1", "v13" */
   vehicleId?: string | null;
+}
+
+interface VehiclePhotoFile {
+  name: string;
+  url: string;
+}
+
+interface VehicleFotoRotacaoRecord {
+  vehicle_id: string;
+  pastas: unknown;
+  indice_atual: number;
+  updated_at: string | null;
+  ordem?: Record<string, string[]> | null;
 }
 
 const DAYS = [1, 2, 3, 4, 5, 6];
@@ -60,6 +73,48 @@ async function callVehiclePhotos(method: string, params: Record<string, any>) {
   }
 }
 
+const getFolderKey = (vehicleId: string, day: string | number) => `${vehicleId}/local_${day}`;
+
+const normalizeOrderMap = (value: unknown): Record<string, string[]> => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.entries(value as Record<string, unknown>).reduce<Record<string, string[]>>(
+    (acc, [folderKey, names]) => {
+      if (Array.isArray(names)) {
+        const validNames = names.filter(
+          (name): name is string => typeof name === "string" && name.length > 0
+        );
+
+        if (validNames.length > 0) {
+          acc[folderKey] = validNames;
+        }
+      }
+
+      return acc;
+    },
+    {}
+  );
+};
+
+const sortPhotosByOrder = (files: VehiclePhotoFile[], savedOrder: string[] = []) => {
+  const alphabetical = [...files].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" })
+  );
+
+  if (!savedOrder.length) return alphabetical;
+
+  const orderIndex = new Map(savedOrder.map((name, index) => [name, index]));
+
+  return alphabetical.sort((a, b) => {
+    const indexA = orderIndex.get(a.name) ?? Number.MAX_SAFE_INTEGER;
+    const indexB = orderIndex.get(b.name) ?? Number.MAX_SAFE_INTEGER;
+
+    if (indexA !== indexB) return indexA - indexB;
+
+    return a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" });
+  });
+};
+
 const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
   const [activeDay, setActiveDay] = useState("1");
   const [uploading, setUploading] = useState(false);
@@ -67,27 +122,34 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  const { data: rotacao } = useQuery({
+  const { data: rotacao } = useQuery<VehicleFotoRotacaoRecord | null>({
     queryKey: ["foto-rotacao", vehicleId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("vehicle_foto_rotacao")
         .select("*")
         .eq("vehicle_id", vehicleId!)
         .maybeSingle();
-      if (data) return data;
+
+      if (error) throw error;
+      if (data) return data as unknown as VehicleFotoRotacaoRecord;
+
       // Auto-create if missing
-      const { data: inserted } = await supabase
+      const { data: inserted, error: insertError } = await supabase
         .from("vehicle_foto_rotacao")
         .insert({ vehicle_id: vehicleId!, pastas: [] as any, indice_atual: 0 })
         .select()
         .single();
-      return inserted;
+
+      if (insertError) throw insertError;
+      return inserted as unknown as VehicleFotoRotacaoRecord;
     },
     enabled: open && !!vehicleId,
   });
 
   const indiceAtual = rotacao?.indice_atual ?? 0;
+  const currentFolderKey = vehicleId ? getFolderKey(vehicleId, activeDay) : "";
+  const photoOrderMap = useMemo(() => normalizeOrderMap(rotacao?.ordem), [rotacao?.ordem]);
 
   const { data: dayCounts = {} } = useQuery({
     queryKey: ["foto-day-counts", vehicleId],
@@ -104,14 +166,20 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     enabled: open && !!vehicleId,
   });
 
-  const { data: photos = [], isLoading: loadingPhotos } = useQuery({
+  const { data: photos = [], isLoading: loadingPhotos } = useQuery<VehiclePhotoFile[]>({
     queryKey: ["foto-day-photos", vehicleId, activeDay],
     queryFn: async () => {
       const result = await callVehiclePhotos("GET", { vehicle_id: vehicleId, day: activeDay });
-      return result?.ok ? (result.files || []) : [];
+      const files = result?.ok ? (result.files || []) : [];
+      return sortPhotosByOrder(files, []);
     },
     enabled: open && !!vehicleId,
   });
+
+  const orderedPhotos = useMemo(
+    () => sortPhotosByOrder(photos, photoOrderMap[currentFolderKey]),
+    [photos, photoOrderMap, currentFolderKey]
+  );
 
   const syncRotacao = async () => {
     if (!vehicleId) return;
@@ -123,21 +191,27 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
       }
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("vehicle_foto_rotacao")
       .select("indice_atual")
       .eq("vehicle_id", vehicleId)
       .maybeSingle();
 
+    if (existingError) throw existingError;
+
     if (existing) {
-      await supabase
+      const { error } = await supabase
         .from("vehicle_foto_rotacao")
         .update({ pastas: activeDays as any, updated_at: new Date().toISOString() })
         .eq("vehicle_id", vehicleId);
+
+      if (error) throw error;
     } else {
-      await supabase
+      const { error } = await supabase
         .from("vehicle_foto_rotacao")
         .insert({ vehicle_id: vehicleId, pastas: activeDays as any, indice_atual: 0 });
+
+      if (error) throw error;
     }
 
     queryClient.invalidateQueries({ queryKey: ["foto-rotacao", vehicleId] });
@@ -188,23 +262,71 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     }
   };
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
+  const onDragEnd = async (result: DropResult) => {
+    if (!result.destination || !vehicleId) return;
+
     const from = result.source.index;
     const to = result.destination.index;
     if (from === to) return;
 
-    // Reorder locally in the query cache
-    queryClient.setQueryData(
-      ["foto-day-photos", vehicleId, activeDay],
-      (old: any[] | undefined) => {
-        if (!old) return old;
-        const reordered = Array.from(old);
-        const [moved] = reordered.splice(from, 1);
-        reordered.splice(to, 0, moved);
-        return reordered;
-      }
+    const reordered = Array.from(orderedPhotos);
+    const [moved] = reordered.splice(from, 1);
+    reordered.splice(to, 0, moved);
+
+    const orderedNames = reordered.map((photo) => photo.name);
+    const nextUpdatedAt = new Date().toISOString();
+    const previousRotacao = queryClient.getQueryData<VehicleFotoRotacaoRecord | null>([
+      "foto-rotacao",
+      vehicleId,
+    ]);
+    const nextOrderMap = {
+      ...normalizeOrderMap(previousRotacao?.ordem),
+      [currentFolderKey]: orderedNames,
+    };
+
+    queryClient.setQueryData<VehicleFotoRotacaoRecord | null>(
+      ["foto-rotacao", vehicleId],
+      (old) => old
+        ? { ...old, ordem: nextOrderMap, updated_at: nextUpdatedAt }
+        : {
+            vehicle_id: vehicleId,
+            pastas: [],
+            indice_atual: 0,
+            updated_at: nextUpdatedAt,
+            ordem: nextOrderMap,
+          }
     );
+
+    try {
+      const { data, error } = await supabase
+        .from("vehicle_foto_rotacao")
+        .update({ ordem: nextOrderMap as any, updated_at: nextUpdatedAt } as any)
+        .eq("vehicle_id", vehicleId)
+        .select("vehicle_id")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        const { error: insertError } = await supabase
+          .from("vehicle_foto_rotacao")
+          .insert({
+            vehicle_id: vehicleId,
+            pastas: rotacao?.pastas ?? [],
+            indice_atual: rotacao?.indice_atual ?? 0,
+            ordem: nextOrderMap as any,
+            updated_at: nextUpdatedAt,
+          } as any);
+
+        if (insertError) throw insertError;
+      }
+
+      toast.success("Ordem das fotos salva!");
+      queryClient.invalidateQueries({ queryKey: ["foto-rotacao", vehicleId] });
+    } catch (err: any) {
+      queryClient.setQueryData(["foto-rotacao", vehicleId], previousRotacao ?? null);
+      toast.error(`Erro ao salvar ordem: ${err.message}`);
+    }
   };
 
   if (!vehicleId) return null;
@@ -267,7 +389,7 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
                     onChange={handleUpload}
                     className="hidden"
                   />
-                  {photos.length > 0 && (
+                  {orderedPhotos.length > 0 && (
                     <p className="text-xs text-muted-foreground">
                       Arraste para reordenar • A 1ª foto será a capa
                     </p>
@@ -278,7 +400,7 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
-                ) : photos.length === 0 ? (
+                ) : orderedPhotos.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <ImageIcon className="h-10 w-10 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">Nenhuma foto no Dia {day}.</p>
@@ -293,7 +415,7 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
                           {...provided.droppableProps}
                           className="grid grid-cols-3 gap-3"
                         >
-                          {photos.map((photo: any, i: number) => (
+                          {orderedPhotos.map((photo, i) => (
                             <Draggable key={photo.name} draggableId={photo.name} index={i}>
                               {(dragProvided, snapshot) => (
                                 <div
