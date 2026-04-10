@@ -331,14 +331,26 @@ const AdminCatalog = () => {
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => { setSelectedVehicle(vehicle); setShowForm(true); }}>
                       <Edit className="h-3 w-3 mr-1" /> Editar
                     </Button>
-                    {vehicle.local_bot_id && (
-                      <Button size="sm" variant="outline" onClick={() => {
-                        setPhotoManagerVehicleId(vehicle.local_bot_id);
-                        setShowPhotoManager(true);
-                      }}>
-                        📷
-                      </Button>
-                    )}
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      let botId = vehicle.local_bot_id;
+                      if (!botId) {
+                        const { data: allVehicles } = await supabase
+                          .from("stock_vehicles")
+                          .select("local_bot_id")
+                          .not("local_bot_id", "is", null);
+                        const maxNum = (allVehicles || []).reduce((max: number, v: any) => {
+                          const match = v.local_bot_id?.match(/^v(\d+)$/);
+                          return match ? Math.max(max, parseInt(match[1])) : max;
+                        }, 0);
+                        botId = `v${maxNum + 1}`;
+                        await supabase.from("stock_vehicles").update({ local_bot_id: botId }).eq("id", vehicle.id);
+                        queryClient.invalidateQueries({ queryKey: ["stock-vehicles"] });
+                      }
+                      setPhotoManagerVehicleId(botId);
+                      setShowPhotoManager(true);
+                    }}>
+                      📷
+                    </Button>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline">

@@ -85,6 +85,20 @@ const VehicleFormDialog = ({ open, onOpenChange, vehicle, onSuccess }: Props) =>
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Auto-generate local_bot_id if empty
+      let localBotId = form.local_bot_id || vehicle?.local_bot_id || null;
+      if (!localBotId) {
+        const { data: allVehicles } = await supabase
+          .from("stock_vehicles")
+          .select("local_bot_id")
+          .not("local_bot_id", "is", null);
+        const maxNum = (allVehicles || []).reduce((max: number, v: any) => {
+          const match = v.local_bot_id?.match(/^v(\d+)$/);
+          return match ? Math.max(max, parseInt(match[1])) : max;
+        }, 0);
+        localBotId = `v${maxNum + 1}`;
+      }
+
       const photosRaw: string[] = Array.isArray(form.photos)
         ? form.photos.filter((photo: unknown): photo is string => typeof photo === "string" && photo.length > 0)
         : [];
@@ -127,6 +141,7 @@ const VehicleFormDialog = ({ open, onOpenChange, vehicle, onSuccess }: Props) =>
         fipe_model_code: form.fipe_model_code || null,
         fipe_year_code: form.fipe_year_code || null,
         fipe_vehicle_type: form.fipe_vehicle_type || null,
+        local_bot_id: localBotId,
       };
 
       if (isEdit) {

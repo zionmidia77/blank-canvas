@@ -1727,6 +1727,105 @@ export type Database = {
           },
         ]
       }
+      vehicles_config: {
+        Row: {
+          aceita_troca: boolean | null
+          ano: string | null
+          cambio: string | null
+          carroceria: string | null
+          combustivel: string | null
+          condicao: string | null
+          cor: string | null
+          cor_externa: string | null
+          cor_interna: string | null
+          created_at: string | null
+          diferenciais: string | null
+          documento: string | null
+          estado_estetico: string | null
+          estado_mecanico: string | null
+          financiamento: string | null
+          id: string
+          loja: string | null
+          marca: string | null
+          modelo: string | null
+          modelo_mkt: string | null
+          observacoes: string | null
+          pasta_fotos: string | null
+          preco: string | null
+          quilometragem: string | null
+          status: string | null
+          tipo: string | null
+          transfere: string | null
+          ultima_postagem: string | null
+          updated_at: string | null
+          versao: string | null
+        }
+        Insert: {
+          aceita_troca?: boolean | null
+          ano?: string | null
+          cambio?: string | null
+          carroceria?: string | null
+          combustivel?: string | null
+          condicao?: string | null
+          cor?: string | null
+          cor_externa?: string | null
+          cor_interna?: string | null
+          created_at?: string | null
+          diferenciais?: string | null
+          documento?: string | null
+          estado_estetico?: string | null
+          estado_mecanico?: string | null
+          financiamento?: string | null
+          id: string
+          loja?: string | null
+          marca?: string | null
+          modelo?: string | null
+          modelo_mkt?: string | null
+          observacoes?: string | null
+          pasta_fotos?: string | null
+          preco?: string | null
+          quilometragem?: string | null
+          status?: string | null
+          tipo?: string | null
+          transfere?: string | null
+          ultima_postagem?: string | null
+          updated_at?: string | null
+          versao?: string | null
+        }
+        Update: {
+          aceita_troca?: boolean | null
+          ano?: string | null
+          cambio?: string | null
+          carroceria?: string | null
+          combustivel?: string | null
+          condicao?: string | null
+          cor?: string | null
+          cor_externa?: string | null
+          cor_interna?: string | null
+          created_at?: string | null
+          diferenciais?: string | null
+          documento?: string | null
+          estado_estetico?: string | null
+          estado_mecanico?: string | null
+          financiamento?: string | null
+          id?: string
+          loja?: string | null
+          marca?: string | null
+          modelo?: string | null
+          modelo_mkt?: string | null
+          observacoes?: string | null
+          pasta_fotos?: string | null
+          preco?: string | null
+          quilometragem?: string | null
+          status?: string | null
+          tipo?: string | null
+          transfere?: string | null
+          ultima_postagem?: string | null
+          updated_at?: string | null
+          versao?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       posting_history_daily: {
