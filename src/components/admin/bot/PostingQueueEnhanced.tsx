@@ -99,6 +99,20 @@ export const PostingQueueEnhanced = ({
     },
   });
 
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      const ids = queueItems?.map((q) => q.id) || [];
+      for (const id of ids) {
+        const { error } = await supabase.from("bot_posting_queue" as any).delete().eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["posting-queue"] });
+      toast.success("Fila limpa com sucesso!");
+    },
+  });
+
   const batchRetry = useMutation({
     mutationFn: async (ids: string[]) => {
       for (const id of ids) {
@@ -183,6 +197,21 @@ export const PostingQueueEnhanced = ({
             >
               <CheckSquare className="w-3.5 h-3.5" /> Lote
             </Button>
+            {queueItems && queueItems.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1 text-xs"
+                disabled={clearAll.isPending}
+                onClick={() => {
+                  if (confirm("Tem certeza que deseja limpar toda a fila de postagens?")) {
+                    clearAll.mutate();
+                  }
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> {clearAll.isPending ? "Limpando..." : "Limpar Fila"}
+              </Button>
+            )}
             <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1">
