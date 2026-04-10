@@ -71,8 +71,22 @@ serve(async (req) => {
 
     // ── DELETE: remove photo ──
     if (req.method === "DELETE") {
-      const body = await req.json();
-      const { vehicle_id, day, filename } = body;
+      let vehicle_id: string | null = null;
+      let day: string | null = null;
+      let filename: string | null = null;
+
+      // Try JSON body first, fall back to query params
+      try {
+        const body = await req.json();
+        vehicle_id = body.vehicle_id;
+        day = body.day;
+        filename = body.filename;
+      } catch {
+        vehicle_id = url.searchParams.get("vehicle_id");
+        day = url.searchParams.get("day");
+        filename = url.searchParams.get("filename");
+      }
+
       if (!vehicle_id || !day || !filename) return json({ ok: false, error: "vehicle_id, day, and filename required" });
 
       const path = `${vehicle_id}/local_${day}/${filename}`;
