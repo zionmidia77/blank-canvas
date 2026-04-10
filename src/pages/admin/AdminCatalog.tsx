@@ -69,6 +69,7 @@ const AdminCatalog = () => {
   const [showForm, setShowForm] = useState(false);
   const [showOCR, setShowOCR] = useState(false);
   const [showPhotoManager, setShowPhotoManager] = useState(false);
+  const [photoManagerVehicleId, setPhotoManagerVehicleId] = useState<string | null>(null);
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const queryClient = useQueryClient();
