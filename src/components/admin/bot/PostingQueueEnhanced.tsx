@@ -99,6 +99,20 @@ export const PostingQueueEnhanced = ({
     },
   });
 
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      const ids = queueItems?.map((q) => q.id) || [];
+      for (const id of ids) {
+        const { error } = await supabase.from("bot_posting_queue" as any).delete().eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["posting-queue"] });
+      toast.success("Fila limpa com sucesso!");
+    },
+  });
+
   const batchRetry = useMutation({
     mutationFn: async (ids: string[]) => {
       for (const id of ids) {
