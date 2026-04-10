@@ -327,10 +327,18 @@ const AdminCatalog = () => {
                     Margem: R$ {profit.toLocaleString("pt-BR")}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => { setSelectedVehicle(vehicle); setShowForm(true); }}>
                       <Edit className="h-3 w-3 mr-1" /> Editar
                     </Button>
+                    {vehicle.local_bot_id && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setPhotoManagerVehicleId(vehicle.local_bot_id);
+                        setShowPhotoManager(true);
+                      }}>
+                        📷
+                      </Button>
+                    )}
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline">
