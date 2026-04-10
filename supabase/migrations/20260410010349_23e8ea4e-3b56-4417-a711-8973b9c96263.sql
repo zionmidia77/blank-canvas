@@ -1,0 +1,1 @@
+DELETE FROM bot_posting_queue;
