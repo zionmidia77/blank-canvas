@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -9,26 +9,26 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  Camera, Upload, Loader2, X, Image as ImageIcon,
+  Camera, Upload, Loader2, X, Image as ImageIcon, GripVertical, Star,
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  vehicleId?: string | null; // local_bot_id
+  vehicleId?: string | null;
 }
 
 const DAYS = [1, 2, 3, 4, 5, 6];
 const SUPABASE_URL = "https://baxpayrwcfdoapnihwhk.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheHBheXJ3Y2Zkb2Fwbmlod2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTkxODcsImV4cCI6MjA5MDczNTE4N30.7KopOVyGviDdRIFb6R-xkp5kHcIPvzukoPcrY2wY_f8";
 
 async function callVehiclePhotos(method: string, params: Record<string, any>) {
+  const headers: Record<string, string> = { apikey: ANON_KEY };
+
   if (method === "GET") {
     const qs = new URLSearchParams(params).toString();
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/vehicle-photos?${qs}`, {
-      headers: {
-        apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheHBheXJ3Y2Zkb2Fwbmlod2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTkxODcsImV4cCI6MjA5MDczNTE4N30.7KopOVyGviDdRIFb6R-xkp5kHcIPvzukoPcrY2wY_f8",
-      },
-    });
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/vehicle-photos?${qs}`, { headers });
     return res.json();
   }
 
@@ -39,22 +39,21 @@ async function callVehiclePhotos(method: string, params: Record<string, any>) {
     formData.append("file", params.file);
     const res = await fetch(`${SUPABASE_URL}/functions/v1/vehicle-photos`, {
       method: "POST",
-      headers: {
-        apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheHBheXJ3Y2Zkb2Fwbmlod2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTkxODcsImV4cCI6MjA5MDczNTE4N30.7KopOVyGviDdRIFb6R-xkp5kHcIPvzukoPcrY2wY_f8",
-      },
+      headers,
       body: formData,
     });
     return res.json();
   }
 
   if (method === "DELETE") {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/vehicle-photos`, {
+    const qs = new URLSearchParams({
+      vehicle_id: params.vehicle_id,
+      day: params.day,
+      filename: params.filename,
+    }).toString();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/vehicle-photos?${qs}`, {
       method: "DELETE",
-      headers: {
-        apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheHBheXJ3Y2Zkb2Fwbmlod2hrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNTkxODcsImV4cCI6MjA5MDczNTE4N30.7KopOVyGviDdRIFb6R-xkp5kHcIPvzukoPcrY2wY_f8",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(params),
+      headers,
     });
     return res.json();
   }
@@ -63,10 +62,10 @@ async function callVehiclePhotos(method: string, params: Record<string, any>) {
 const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
   const [activeDay, setActiveDay] = useState("1");
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
-  // Fetch vehicle_foto_rotacao record
   const { data: rotacao } = useQuery({
     queryKey: ["foto-rotacao", vehicleId],
     queryFn: async () => {
@@ -82,7 +81,6 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
 
   const indiceAtual = rotacao?.indice_atual ?? 0;
 
-  // Fetch photo counts for all 6 days
   const { data: dayCounts = {} } = useQuery({
     queryKey: ["foto-day-counts", vehicleId],
     queryFn: async () => {
@@ -98,7 +96,6 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     enabled: open && !!vehicleId,
   });
 
-  // Fetch photos for active day
   const { data: photos = [], isLoading: loadingPhotos } = useQuery({
     queryKey: ["foto-day-photos", vehicleId, activeDay],
     queryFn: async () => {
@@ -108,7 +105,6 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     enabled: open && !!vehicleId,
   });
 
-  // Sync vehicle_foto_rotacao after changes
   const syncRotacao = async () => {
     if (!vehicleId) return;
     const activeDays: string[] = [];
@@ -140,7 +136,6 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     queryClient.invalidateQueries({ queryKey: ["foto-day-counts", vehicleId] });
   };
 
-  // Upload handler
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length || !vehicleId) return;
@@ -165,9 +160,9 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
     }
   };
 
-  // Delete handler
   const deletePhoto = async (filename: string) => {
     if (!vehicleId) return;
+    setDeleting(filename);
     try {
       const result = await callVehiclePhotos("DELETE", {
         vehicle_id: vehicleId,
@@ -179,8 +174,29 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
       queryClient.invalidateQueries({ queryKey: ["foto-day-photos", vehicleId, activeDay] });
       await syncRotacao();
     } catch (err: any) {
-      toast.error(`Erro: ${err.message}`);
+      toast.error(`Erro ao excluir: ${err.message}`);
+    } finally {
+      setDeleting(null);
     }
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const from = result.source.index;
+    const to = result.destination.index;
+    if (from === to) return;
+
+    // Reorder locally in the query cache
+    queryClient.setQueryData(
+      ["foto-day-photos", vehicleId, activeDay],
+      (old: any[] | undefined) => {
+        if (!old) return old;
+        const reordered = Array.from(old);
+        const [moved] = reordered.splice(from, 1);
+        reordered.splice(to, 0, moved);
+        return reordered;
+      }
+    );
   };
 
   if (!vehicleId) return null;
@@ -225,7 +241,7 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
           {DAYS.map((day) => (
             <TabsContent key={day} value={String(day)} className="flex-1 overflow-auto mt-3">
               <div className="space-y-3">
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <Button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
@@ -243,6 +259,11 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
                     onChange={handleUpload}
                     className="hidden"
                   />
+                  {photos.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Arraste para reordenar • A 1ª foto será a capa
+                    </p>
+                  )}
                 </div>
 
                 {loadingPhotos ? (
@@ -256,21 +277,74 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
                     <p className="text-xs">Clique em "Adicionar fotos" para enviar.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    {photos.map((photo: any) => (
-                      <div key={photo.name} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
-                        <img src={photo.url} alt={photo.name} className="w-full h-full object-cover" loading="lazy" />
-                        <button
-                          onClick={() => {
-                            if (confirm("Excluir esta foto?")) deletePhoto(photo.name);
-                          }}
-                          className="absolute top-1 right-1 p-1.5 rounded-md bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                  <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId={`photos-day-${day}`} direction="horizontal">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="grid grid-cols-3 gap-3"
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                          {photos.map((photo: any, i: number) => (
+                            <Draggable key={photo.name} draggableId={photo.name} index={i}>
+                              {(dragProvided, snapshot) => (
+                                <div
+                                  ref={dragProvided.innerRef}
+                                  {...dragProvided.draggableProps}
+                                  className={`relative group aspect-square rounded-lg overflow-hidden border bg-muted transition-shadow ${
+                                    snapshot.isDragging ? "shadow-xl ring-2 ring-primary/50 z-50" : "border-border"
+                                  }`}
+                                >
+                                  <img
+                                    src={photo.url}
+                                    alt={photo.name}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+
+                                  {/* Cover badge */}
+                                  {i === 0 && (
+                                    <span className="absolute top-1 left-1 flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground font-medium">
+                                      <Star className="h-3 w-3" /> Capa
+                                    </span>
+                                  )}
+
+                                  {/* Position badge */}
+                                  {i > 0 && (
+                                    <span className="absolute top-1 left-1 text-[10px] min-w-[20px] text-center px-1.5 py-0.5 rounded-full bg-background/80 text-foreground font-medium">
+                                      {i + 1}
+                                    </span>
+                                  )}
+
+                                  {/* Drag handle */}
+                                  <div
+                                    {...dragProvided.dragHandleProps}
+                                    className="absolute top-1 right-8 p-1 rounded-md bg-background/80 text-muted-foreground cursor-grab active:cursor-grabbing opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <GripVertical className="h-4 w-4" />
+                                  </div>
+
+                                  {/* Delete button - always visible on mobile */}
+                                  <button
+                                    onClick={() => deletePhoto(photo.name)}
+                                    disabled={deleting === photo.name}
+                                    className="absolute top-1 right-1 p-1.5 rounded-md bg-destructive text-destructive-foreground opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                  >
+                                    {deleting === photo.name ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <X className="h-3 w-3" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 )}
               </div>
             </TabsContent>
