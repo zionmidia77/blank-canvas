@@ -1852,6 +1852,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_next_pasta: { Args: { p_vehicle_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
