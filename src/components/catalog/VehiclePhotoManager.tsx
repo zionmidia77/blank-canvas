@@ -75,7 +75,14 @@ const VehiclePhotoManager = ({ open, onOpenChange, vehicleId }: Props) => {
         .select("*")
         .eq("vehicle_id", vehicleId!)
         .maybeSingle();
-      return data;
+      if (data) return data;
+      // Auto-create if missing
+      const { data: inserted } = await supabase
+        .from("vehicle_foto_rotacao")
+        .insert({ vehicle_id: vehicleId!, pastas: [] as any, indice_atual: 0 })
+        .select()
+        .single();
+      return inserted;
     },
     enabled: open && !!vehicleId,
   });
