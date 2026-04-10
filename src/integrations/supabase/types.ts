@@ -1650,18 +1650,21 @@ export type Database = {
       vehicle_foto_rotacao: {
         Row: {
           indice_atual: number
+          ordem: Json
           pastas: Json
           updated_at: string | null
           vehicle_id: string
         }
         Insert: {
           indice_atual?: number
+          ordem?: Json
           pastas?: Json
           updated_at?: string | null
           vehicle_id: string
         }
         Update: {
           indice_atual?: number
+          ordem?: Json
           pastas?: Json
           updated_at?: string | null
           vehicle_id?: string
