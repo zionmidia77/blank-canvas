@@ -197,6 +197,21 @@ export const PostingQueueEnhanced = ({
             >
               <CheckSquare className="w-3.5 h-3.5" /> Lote
             </Button>
+            {queueItems && queueItems.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1 text-xs"
+                disabled={clearAll.isPending}
+                onClick={() => {
+                  if (confirm("Tem certeza que deseja limpar toda a fila de postagens?")) {
+                    clearAll.mutate();
+                  }
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" /> {clearAll.isPending ? "Limpando..." : "Limpar Fila"}
+              </Button>
+            )}
             <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1">
