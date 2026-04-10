@@ -426,7 +426,7 @@ const AdminCatalog = () => {
 
 
       <AdminPhotoLightbox photos={lightboxPhotos} initialIndex={0} open={lightboxOpen} onClose={() => setLightboxOpen(false)} />
-      <VehiclePhotoManager open={showPhotoManager} onOpenChange={setShowPhotoManager} />
+      <VehiclePhotoManager open={showPhotoManager} onOpenChange={setShowPhotoManager} vehicleId={photoManagerVehicleId} />
     </div>
   );
 };
