@@ -69,6 +69,7 @@ const AdminCatalog = () => {
   const [showForm, setShowForm] = useState(false);
   const [showOCR, setShowOCR] = useState(false);
   const [showPhotoManager, setShowPhotoManager] = useState(false);
+  const [photoManagerVehicleId, setPhotoManagerVehicleId] = useState<string | null>(null);
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -326,10 +327,18 @@ const AdminCatalog = () => {
                     Margem: R$ {profit.toLocaleString("pt-BR")}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button size="sm" variant="outline" className="flex-1" onClick={() => { setSelectedVehicle(vehicle); setShowForm(true); }}>
                       <Edit className="h-3 w-3 mr-1" /> Editar
                     </Button>
+                    {vehicle.local_bot_id && (
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setPhotoManagerVehicleId(vehicle.local_bot_id);
+                        setShowPhotoManager(true);
+                      }}>
+                        📷
+                      </Button>
+                    )}
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline">
@@ -417,7 +426,7 @@ const AdminCatalog = () => {
 
 
       <AdminPhotoLightbox photos={lightboxPhotos} initialIndex={0} open={lightboxOpen} onClose={() => setLightboxOpen(false)} />
-      <VehiclePhotoManager open={showPhotoManager} onOpenChange={setShowPhotoManager} />
+      <VehiclePhotoManager open={showPhotoManager} onOpenChange={setShowPhotoManager} vehicleId={photoManagerVehicleId} />
     </div>
   );
 };
